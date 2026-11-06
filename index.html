@@ -364,7 +364,7 @@ body.ml-mode .ct h4{font-family:'Noto Serif Malayalam',serif;font-size:15px}
         <option value="3" data-en="3 people" data-ml="3 പേർ">3 people</option><option value="4+" data-en="4 or more" data-ml="4-ൽ കൂടുതൽ">4 or more</option>
       </select>
       <textarea name="msg" rows="2" data-ph-en="Prayers &amp; wishes for the couple" data-ph-ml="ദമ്പതികൾക്കുള്ള പ്രാർത്ഥനകളും ആശംസകളും" placeholder="Prayers &amp; wishes for the couple"></textarea>
-      <button class="btn" type="submit" style="justify-self:center;padding:13px 36px" data-en="SEND REPLY ON WHATSAPP" data-ml="WhatsApp വഴി അയയ്ക്കുക">SEND REPLY ON WHATSAPP</button>
+      <button class="btn" type="submit" style="justify-self:center;padding:13px 36px" data-en="SEND REPLY" data-ml="മറുപടി അയയ്ക്കുക">SEND REPLY</button>
     </form>
     <div id="thanks" data-en="Thank you! God bless you 🙏" data-ml="നന്ദി! ദൈവം അനുഗ്രഹിക്കട്ടെ 🙏">Thank you! God bless you 🙏</div>
   </div>
@@ -476,17 +476,20 @@ document.querySelectorAll('.cal').forEach(a=>a.onclick=e=>{e.preventDefault();co
   const ics=['BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT','DTSTART:'+v.s,'DTEND:'+v.e,'SUMMARY:'+v.t,'LOCATION:'+v.l,'END:VEVENT','END:VCALENDAR'].join('\r\n');
   const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));l.download=a.dataset.ev+'.ics';l.click();});
 
-// ---- Reply: sends a WhatsApp message to the groom's or bride's family ----
-document.getElementById('form').addEventListener('submit',e=>{e.preventDefault();const f=e.target;
+// ---- Reply: sent by email to personala613@gmail.com ----
+document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const f=e.target;
   const sel=n=>f.querySelector('[name='+n+']');const opt=n=>sel(n).options[sel(n).selectedIndex].text;
-  const num=sel('side').value==='bride'?'919633597605':'919048656825';
-  const msg='🙏 Wedding reply – Jerin & Merlin\n\nName: '+sel('name').value+(sel('phone').value?'\nPhone: '+sel('phone').value:'')+
-    '\n'+opt('side')+'\nAttending: '+opt('attend')+'\nPeople: '+opt('guests')+(sel('msg').value?'\nWishes: '+sel('msg').value:'');
-  try{fetch('https://formsubmit.co/ajax/personala613@gmail.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+  const btn=f.querySelector('button[type=submit]');const ml=document.body.classList.contains('ml-mode');
+  btn.disabled=true;btn.textContent=ml?'അയയ്ക്കുന്നു…':'SENDING…';
+  try{const r=await fetch('https://formsubmit.co/ajax/personala613@gmail.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
     body:JSON.stringify({_subject:'Attendance Response – Jerin & Merlin',_template:'table',_captcha:'false',Name:sel('name').value,Phone:sel('phone').value,
-      Side:opt('side'),Attending:opt('attend'),People:opt('guests'),Wishes:sel('msg').value,Language:document.getElementById('langField').value})}).catch(()=>{});}catch(err){}
-  window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');
-  f.style.display='none';document.getElementById('thanks').style.display='block';});
+      Side:opt('side'),Attending:opt('attend'),People:opt('guests'),Wishes:sel('msg').value,Language:document.getElementById('langField').value})});
+    if(!r.ok)throw 0;
+    f.style.display='none';document.getElementById('thanks').style.display='block';
+  }catch(err){btn.disabled=false;btn.textContent=ml?'വീണ്ടും ശ്രമിക്കുക':'TRY AGAIN';
+    alertBox(ml?'അയയ്ക്കാൻ കഴിഞ്ഞില്ല. ഇന്റർനെറ്റ് പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക.':'Could not send. Please check your internet and try again.');}
+});
+function alertBox(t){let d=document.getElementById('formErr');if(!d){d=document.createElement('p');d.id='formErr';d.style.cssText='color:#a8283a;margin-top:12px;text-align:center';document.getElementById('form').appendChild(d);}d.textContent=t;}
 </script>
 </body>
 </html>
