@@ -482,6 +482,9 @@ document.getElementById('form').addEventListener('submit',e=>{e.preventDefault()
   const num=sel('side').value==='bride'?'919633597605':'919048656825';
   const msg='🙏 Wedding reply – Jerin & Merlin\n\nName: '+sel('name').value+(sel('phone').value?'\nPhone: '+sel('phone').value:'')+
     '\n'+opt('side')+'\nAttending: '+opt('attend')+'\nPeople: '+opt('guests')+(sel('msg').value?'\nWishes: '+sel('msg').value:'');
+  try{fetch('https://formsubmit.co/ajax/personala613@gmail.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+    body:JSON.stringify({_subject:'Attendance Response – Jerin & Merlin',_template:'table',_captcha:'false',Name:sel('name').value,Phone:sel('phone').value,
+      Side:opt('side'),Attending:opt('attend'),People:opt('guests'),Wishes:sel('msg').value,Language:document.getElementById('langField').value})}).catch(()=>{});}catch(err){}
   window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');
   f.style.display='none';document.getElementById('thanks').style.display='block';});
 </script>
