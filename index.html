@@ -476,13 +476,13 @@ document.querySelectorAll('.cal').forEach(a=>a.onclick=e=>{e.preventDefault();co
   const ics=['BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT','DTSTART:'+v.s,'DTEND:'+v.e,'SUMMARY:'+v.t,'LOCATION:'+v.l,'END:VEVENT','END:VCALENDAR'].join('\r\n');
   const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));l.download=a.dataset.ev+'.ics';l.click();});
 
-// ---- Reply: sent by email to personala613@gmail.com ----
+// ---- Reply: sent by email (Web3Forms) to personala613@gmail.com ----
 document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const f=e.target;
   const sel=n=>f.querySelector('[name='+n+']');const opt=n=>sel(n).options[sel(n).selectedIndex].text;
   const btn=f.querySelector('button[type=submit]');const ml=document.body.classList.contains('ml-mode');
   btn.disabled=true;btn.textContent=ml?'അയയ്ക്കുന്നു…':'SENDING…';
-  try{const r=await fetch('https://formsubmit.co/ajax/personala613@gmail.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
-    body:JSON.stringify({_subject:'Attendance Response – Jerin & Merlin',_template:'table',_captcha:'false',Name:sel('name').value,Phone:sel('phone').value,
+  try{const r=await fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+    body:JSON.stringify({access_key:'7bcee462-87a6-4ce8-a30c-b9f499e1231c',subject:'Attendance Response – Jerin & Merlin',from_name:'Jerin & Merlin Wedding Card',Name:sel('name').value,Phone:sel('phone').value,
       Side:opt('side'),Attending:opt('attend'),People:opt('guests'),Wishes:sel('msg').value,Language:document.getElementById('langField').value})});
     if(!r.ok)throw 0;
     f.style.display='none';document.getElementById('thanks').style.display='block';
