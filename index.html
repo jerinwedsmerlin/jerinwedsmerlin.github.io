@@ -174,6 +174,9 @@ body.ml-mode .ct h4{font-family:'Noto Serif Malayalam',serif;font-size:15px}
 #music{position:fixed;left:14px;bottom:14px;z-index:40;width:54px;height:54px;border-radius:50%;border:none;background:#b8913a;padding:0;line-height:0;color:#fff;font-size:18px;box-shadow:0 6px 16px #0000002e;cursor:pointer;display:none}
 #music.on{animation:spinm 4s linear infinite}
 #music:not(.on){opacity:.75}
+#mhint{position:fixed;left:76px;bottom:26px;z-index:40;background:#fff;color:#7a5c1e;border:1px solid #d9b65f;border-radius:20px;padding:6px 12px;font-size:13px;box-shadow:0 4px 12px #0002;opacity:0;visibility:hidden;transition:opacity .4s;cursor:pointer}
+#mhint.show{opacity:1;visibility:visible;animation:mhb 1.6s ease-in-out infinite}
+@keyframes mhb{50%{transform:translateX(4px)}}
 .mfx{position:fixed;left:30px;bottom:52px;z-index:39;pointer-events:none;will-change:transform,opacity;line-height:0}
 @keyframes mfxRise{0%{transform:translate(0,0) rotate(0) scale(.5);opacity:0}15%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(1);opacity:0}}
 @keyframes mfxFly{0%{transform:translate(0,0) scale(.5);opacity:0}12%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1);opacity:0}}
@@ -432,8 +435,13 @@ let userPaused=false,retried=false;
 function fadeIn(){try{bgm.volume=0;let v=0;const t=setInterval(()=>{v=Math.min(1,v+0.05);try{bgm.volume=v}catch(e){}if(v>=1)clearInterval(t)},100)}catch(e){}}
 function playMusic(){userPaused=false;bgm.muted=false;fadeIn();const p=bgm.play();if(p&&p.catch)p.catch(()=>{try{bgm.volume=1}catch(e){}if(!retried){retried=true;bgm.load();const q=bgm.play();if(q&&q.catch)q.catch(()=>{})}});}
 mbtn.onclick=e=>{e.stopPropagation();if(bgm.paused)playMusic();else{userPaused=true;bgm.pause()}};
+// iPhone: let music play even when the phone is on silent mode
+try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
 // Backup: if the phone blocked the first try, start on the guest's next tap
-['touchend','click'].forEach(ev=>document.addEventListener(ev,()=>{if(bgm.paused&&!userPaused&&chooser.classList.contains('hide'))playMusic()},{passive:true}));
+document.addEventListener('click',e=>{if(bgm.paused&&!userPaused&&chooser.classList.contains('hide')&&!e.target.closest('#music'))playMusic()});
+// Show a small 'Tap for music' hint while music is not playing
+const mhint=document.createElement('div');mhint.id='mhint';mhint.textContent='♪ Tap for music';document.body.appendChild(mhint);mhint.onclick=()=>playMusic();
+setInterval(()=>{mhint.classList.toggle('show',bgm.paused&&!userPaused&&chooser.classList.contains('hide'))},800);
 
 // ---- Photo gallery: add your photos here (put the image files next to index.html) ----
 const PHOTOS=[
