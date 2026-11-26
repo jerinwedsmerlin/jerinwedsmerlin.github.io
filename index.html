@@ -398,7 +398,7 @@ body.ml-mode .ct h4{font-family:'Noto Serif Malayalam',serif;font-size:15px}
 </section>
 
 <button id="music" aria-label="Music">♪</button>
-<audio id="bgm" src="music.mp3" loop preload="auto"></audio>
+<audio id="bgm" src="romantic_piano_instrumental.mp3" loop preload="auto"></audio>
 
 <footer>
   <div class="tg" style="font-size:60px">Jerin &amp; Merlin</div>
@@ -421,8 +421,8 @@ chooser.querySelectorAll('button').forEach(b=>b.onclick=()=>{setLang(b.dataset.l
 
 // ---- Background music (put a file named music.mp3 next to index.html) ----
 const bgm=document.getElementById('bgm'),mbtn=document.getElementById('music');
-bgm.addEventListener('canplay',()=>{mbtn.style.display='block'});
-function playMusic(){bgm.play().then(()=>{mbtn.classList.add('on');mbtn.textContent='❚❚'}).catch(()=>{});}
+const showM=()=>{mbtn.style.display='block'};bgm.addEventListener('canplay',showM);bgm.addEventListener('playing',showM);if(bgm.readyState>=3)showM();
+function playMusic(){bgm.volume=0;bgm.play().then(()=>{mbtn.classList.add('on');mbtn.textContent='❚❚';let v=0;const t=setInterval(()=>{v=Math.min(1,v+0.05);bgm.volume=v;if(v>=1)clearInterval(t)},100)}).catch(()=>{bgm.volume=1});}
 mbtn.onclick=()=>{if(bgm.paused)playMusic();else{bgm.pause();mbtn.classList.remove('on');mbtn.textContent='♪'}};
 
 // ---- Photo gallery: add your photos here (put the image files next to index.html) ----
