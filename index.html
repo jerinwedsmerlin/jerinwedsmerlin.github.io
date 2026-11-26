@@ -173,6 +173,7 @@ body.ml-mode .ct h4{font-family:'Noto Serif Malayalam',serif;font-size:15px}
 .share{margin-top:30px}
 #music{position:fixed;left:14px;bottom:14px;z-index:40;width:48px;height:48px;border-radius:50%;border:none;background:var(--green);color:#fff;font-size:18px;box-shadow:0 6px 16px #0000002e;cursor:pointer;display:none}
 #music.on{animation:spinm 4s linear infinite}
+#music:not(.on){opacity:.75}
 @keyframes spinm{to{transform:rotate(360deg)}}
 @media(max-width:520px){
   .story::before{left:14px}.st,.st:nth-child(even){width:100%;margin-left:0;padding:0 0 30px 40px;text-align:left}
@@ -397,7 +398,7 @@ body.ml-mode .ct h4{font-family:'Noto Serif Malayalam',serif;font-size:15px}
   </div>
 </section>
 
-<button id="music" aria-label="Music">♪</button>
+<button id="music" aria-label="Music">🎻</button>
 <audio id="bgm" src="romantic_piano_instrumental.mp3" loop preload="auto"></audio>
 
 <footer>
@@ -422,8 +423,8 @@ chooser.querySelectorAll('button').forEach(b=>b.onclick=()=>{setLang(b.dataset.l
 // ---- Background music (put a file named music.mp3 next to index.html) ----
 const bgm=document.getElementById('bgm'),mbtn=document.getElementById('music');
 const showM=()=>{mbtn.style.display='block'};bgm.addEventListener('canplay',showM);bgm.addEventListener('playing',showM);if(bgm.readyState>=3)showM();
-function playMusic(){bgm.volume=0;bgm.play().then(()=>{mbtn.classList.add('on');mbtn.textContent='❚❚';let v=0;const t=setInterval(()=>{v=Math.min(1,v+0.05);bgm.volume=v;if(v>=1)clearInterval(t)},100)}).catch(()=>{bgm.volume=1});}
-mbtn.onclick=()=>{if(bgm.paused)playMusic();else{bgm.pause();mbtn.classList.remove('on');mbtn.textContent='♪'}};
+function playMusic(){bgm.volume=0;bgm.play().then(()=>{mbtn.classList.add('on');mbtn.textContent='🎻';let v=0;const t=setInterval(()=>{v=Math.min(1,v+0.05);bgm.volume=v;if(v>=1)clearInterval(t)},100)}).catch(()=>{bgm.volume=1});}
+mbtn.onclick=()=>{if(bgm.paused)playMusic();else{bgm.pause();mbtn.classList.remove('on');mbtn.textContent='🎻'}};
 
 // ---- Photo gallery: add your photos here (put the image files next to index.html) ----
 const PHOTOS=[
