@@ -404,7 +404,7 @@ body.ml-mode .ct h4{font-family:'Noto Serif Malayalam',serif;font-size:15px}
 </section>
 
 <button id="music" aria-label="Music" title="Play music"><svg viewBox="5 3 30 34" width="40" height="40" aria-hidden="true"><mask id="vmask"><rect x="0" y="0" width="40" height="40" fill="white"/><circle cx="13.2" cy="24.2" r="2.1" fill="black"/><circle cx="26.8" cy="24.2" r="2.1" fill="black"/></mask><g transform="rotate(-30 20 20)"><g mask="url(#vmask)"><ellipse cx="20" cy="19.5" rx="6.3" ry="5.2" fill="#fff"/><ellipse cx="20" cy="29" rx="7.6" ry="6.4" fill="#fff"/><rect x="14.5" y="21" width="11" height="6" fill="#fff"/></g><rect x="19" y="5.5" width="2" height="10" rx="0.8" fill="#fff"/><circle cx="20" cy="4.6" r="1.9" fill="#fff"/><rect x="17.6" y="7" width="1.6" height="0.9" fill="#fff"/><rect x="20.8" y="7" width="1.6" height="0.9" fill="#fff"/><rect x="17.6" y="9.2" width="1.6" height="0.9" fill="#fff"/><rect x="20.8" y="9.2" width="1.6" height="0.9" fill="#fff"/><path d="M16.6 23.5c-.6 1 .6 2.2 0 3.6M23.4 23.5c.6 1-.6 2.2 0 3.6" stroke="#b8913a" stroke-width=".9" fill="none" stroke-linecap="round"/><rect x="18" y="31" width="4" height="1.1" rx=".5" fill="#b8913a"/><path d="M19.4 15v15.5M20.6 15v15.5" stroke="#b8913a" stroke-width=".35" opacity=".7"/></g></svg></button>
-<audio id="bgm" src="romantic_piano_instrumental.mp3" loop preload="auto"></audio>
+<audio id="bgm" src="romantic_piano_instrumental.mp3" loop preload="auto" playsinline></audio>
 
 <footer>
   <div class="tg" style="font-size:60px">Jerin &amp; Merlin</div>
@@ -427,9 +427,13 @@ chooser.querySelectorAll('button').forEach(b=>b.onclick=()=>{setLang(b.dataset.l
 
 // ---- Background music (put a file named music.mp3 next to index.html) ----
 const bgm=document.getElementById('bgm'),mbtn=document.getElementById('music');
-const showM=()=>{mbtn.style.display='block'};bgm.addEventListener('canplay',showM);bgm.addEventListener('playing',showM);if(bgm.readyState>=3)showM();
-function playMusic(){bgm.volume=0;bgm.play().then(()=>{mbtn.classList.add('on');mbtn.title='Pause music';let v=0;const t=setInterval(()=>{v=Math.min(1,v+0.05);bgm.volume=v;if(v>=1)clearInterval(t)},100)}).catch(()=>{bgm.volume=1});}
-mbtn.onclick=()=>{if(bgm.paused)playMusic();else{bgm.pause();mbtn.classList.remove('on');mbtn.title='Play music'}};
+mbtn.style.display='block';bgm.addEventListener('playing',()=>{mbtn.classList.add('on');mbtn.title='Pause music'});bgm.addEventListener('pause',()=>{mbtn.classList.remove('on');mbtn.title='Play music'});
+let userPaused=false,retried=false;
+function fadeIn(){try{bgm.volume=0;let v=0;const t=setInterval(()=>{v=Math.min(1,v+0.05);try{bgm.volume=v}catch(e){}if(v>=1)clearInterval(t)},100)}catch(e){}}
+function playMusic(){userPaused=false;bgm.muted=false;fadeIn();const p=bgm.play();if(p&&p.catch)p.catch(()=>{try{bgm.volume=1}catch(e){}if(!retried){retried=true;bgm.load();const q=bgm.play();if(q&&q.catch)q.catch(()=>{})}});}
+mbtn.onclick=e=>{e.stopPropagation();if(bgm.paused)playMusic();else{userPaused=true;bgm.pause()}};
+// Backup: if the phone blocked the first try, start on the guest's next tap
+['touchend','click'].forEach(ev=>document.addEventListener(ev,()=>{if(bgm.paused&&!userPaused&&chooser.classList.contains('hide'))playMusic()},{passive:true}));
 
 // ---- Photo gallery: add your photos here (put the image files next to index.html) ----
 const PHOTOS=[
