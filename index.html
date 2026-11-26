@@ -426,22 +426,41 @@ function setLang(l){
   try{localStorage.setItem('jm-lang',l)}catch(e){}
 }
 const chooser=document.getElementById('chooser');
-chooser.querySelectorAll('button').forEach(b=>b.onclick=()=>{setLang(b.dataset.l);chooser.classList.add('hide');playMusic();});
+// Music starts in the same tap as the language choice (phones require this)
+chooser.querySelectorAll('button').forEach(b=>b.onclick=()=>{playMusic();setLang(b.dataset.l);chooser.classList.add('hide');});
 
-// ---- Background music (put a file named music.mp3 next to index.html) ----
+// ---- Background music: normal player first, phone-safe Web Audio backup ----
 const bgm=document.getElementById('bgm'),mbtn=document.getElementById('music');
-mbtn.style.display='block';bgm.addEventListener('playing',()=>{mbtn.classList.add('on');mbtn.title='Pause music'});bgm.addEventListener('pause',()=>{mbtn.classList.remove('on');mbtn.title='Play music'});
-let userPaused=false,retried=false;
-function fadeIn(){try{bgm.volume=0;let v=0;const t=setInterval(()=>{v=Math.min(1,v+0.05);try{bgm.volume=v}catch(e){}if(v>=1)clearInterval(t)},100)}catch(e){}}
-function playMusic(){userPaused=false;bgm.muted=false;fadeIn();const p=bgm.play();if(p&&p.catch)p.catch(()=>{try{bgm.volume=1}catch(e){}if(!retried){retried=true;bgm.load();const q=bgm.play();if(q&&q.catch)q.catch(()=>{})}});}
-mbtn.onclick=e=>{e.stopPropagation();if(bgm.paused)playMusic();else{userPaused=true;bgm.pause()}};
-// iPhone: let music play even when the phone is on silent mode
+mbtn.style.display='block';
+window.musicOn=false;
+let userPaused=false,actx=null,gainN=null,srcN=null,buf=null,useWA=false,loadingWA=false,askedAt=0;
+function setOn(on){window.musicOn=on;mbtn.classList.toggle('on',on);mbtn.title=on?'Pause music':'Play music';}
+bgm.addEventListener('playing',()=>{if(!useWA)setOn(true)});
+bgm.addEventListener('pause',()=>{if(!useWA)setOn(false)});
 try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
-// Backup: if the phone blocked the first try, start on the guest's next tap
-document.addEventListener('click',e=>{if(bgm.paused&&!userPaused&&chooser.classList.contains('hide')&&!e.target.closest('#music'))playMusic()});
-// Show a small 'Tap for music' hint while music is not playing
+function unlock(){try{const C=window.AudioContext||window.webkitAudioContext;if(C&&!actx){actx=new C();gainN=actx.createGain();gainN.connect(actx.destination)}if(actx&&actx.state!=='running')actx.resume()}catch(e){}}
+function startWA(){
+ if(!actx||userPaused)return;useWA=true;try{bgm.pause()}catch(e){}
+ const go=()=>{if(userPaused)return;srcN=actx.createBufferSource();srcN.buffer=buf;srcN.loop=true;srcN.connect(gainN);
+  const t=actx.currentTime;gainN.gain.setValueAtTime(0,t);gainN.gain.linearRampToValueAtTime(1,t+2);srcN.start(0);actx.resume();setOn(true)};
+ if(buf){if(!srcN)go();return}
+ if(loadingWA)return;loadingWA=true;
+ fetch(bgm.currentSrc||bgm.src).then(r=>r.arrayBuffer()).then(ab=>new Promise((res,rej)=>{const p=actx.decodeAudioData(ab,res,rej);if(p&&p.catch)p.catch(rej)})).then(b=>{buf=b;go()}).catch(()=>{loadingWA=false});
+}
+function playMusic(){
+ userPaused=false;askedAt=Date.now();unlock();
+ if(useWA){if(srcN){actx.resume();setOn(true)}else startWA();return}
+ bgm.muted=false;
+ const p=bgm.play();if(p&&p.catch)p.catch(()=>startWA());
+ setTimeout(()=>{if(!userPaused&&!useWA&&!window.musicOn)startWA()},5000);
+}
+function pauseMusic(){userPaused=true;if(useWA){try{actx.suspend()}catch(e){}setOn(false)}else bgm.pause()}
+mbtn.onclick=e=>{e.stopPropagation();window.musicOn?pauseMusic():playMusic()};
+// Backup: if a phone still blocked it, the guest's next tap anywhere starts it
+document.addEventListener('click',e=>{if(!window.musicOn&&!userPaused&&chooser.classList.contains('hide')&&!e.target.closest('#music'))playMusic()});
+// Small 'Tap for music' hint only if music still hasn't started after 7 seconds
 const mhint=document.createElement('div');mhint.id='mhint';mhint.textContent='♪ Tap for music';document.body.appendChild(mhint);mhint.onclick=()=>playMusic();
-setInterval(()=>{mhint.classList.toggle('show',bgm.paused&&!userPaused&&chooser.classList.contains('hide'))},800);
+setInterval(()=>{mhint.classList.toggle('show',!window.musicOn&&!userPaused&&chooser.classList.contains('hide')&&Date.now()-askedAt>7000)},800);
 
 // ---- Photo gallery: add your photos here (put the image files next to index.html) ----
 const PHOTOS=[
@@ -534,7 +553,7 @@ function heart(c){return '<svg viewBox="0 0 24 24" width="20" height="20"><path 
 var dove='<svg viewBox="0 0 48 32" width="50" height="34"><path fill="#fff" stroke="#8f8670" stroke-width=".9" d="M4 19c5-2 10-2 14 0 4-1 9-1 13 1l9-3-4 5c1 2 0 4-3 5-5 2-12 1-17-1-5 1-9 0-12-3l4-1z"/><circle cx="34" cy="18.4" r=".9" fill="#555"/><path d="M40 17l4-1-3 2z" fill="#e0a33a"/><g class="wing"><path fill="#fff" stroke="#8f8670" stroke-width=".9" d="M17 19c-1-7 3-14 12-17-2 5-1 9 1 12-1 3-5 5-13 5z"/></g></svg>';
 function pick(l){return l[Math.random()*l.length|0]}
 function spawn(){
- if(a.paused||document.hidden)return;
+ if(!window.musicOn||document.hidden)return;
  var r=Math.random(),e=document.createElement('div'),d,fly=false;
  if(r<.2){e.innerHTML=dove;fly=true;d=4200}
  else if(r<.6){e.innerHTML=(Math.random()<.5?note:note2)(pick([G,N]));d=3600}
@@ -556,7 +575,7 @@ setInterval(spawn,700);
 var a=document.getElementById('bgm'),box=document.createElement('div'),log=[];
 box.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99;background:#000d;color:#0f0;font:12px monospace;padding:8px;max-height:40vh;overflow:auto;white-space:pre-wrap';
 var pre=document.createElement('div');box.appendChild(pre);document.body.appendChild(box);
-function st(){return 'paused='+a.paused+' muted='+a.muted+' vol='+a.volume+' ready='+a.readyState+' net='+a.networkState+' t='+a.currentTime.toFixed(1)+(a.error?' ERR='+a.error.code+' '+(a.error.message||''):'')}
+function st(){return 'paused='+a.paused+' muted='+a.muted+' vol='+a.volume+' ready='+a.readyState+' net='+a.networkState+' t='+a.currentTime.toFixed(1)+' on='+window.musicOn+' webaudio='+(typeof useWA!=='undefined'&&useWA)+(typeof actx!=='undefined'&&actx?' ctx='+actx.state:'')+(a.error?' ERR='+a.error.code+' '+(a.error.message||''):'')}
 function L(m){log.push(new Date().toTimeString().slice(0,8)+' '+m);pre.textContent='MUSIC CHECK – screenshot this\n'+navigator.userAgent+'\nsrc='+a.currentSrc+'\n'+st()+'\n\n'+log.slice(-14).join('\n')}
 ['loadstart','loadedmetadata','canplay','playing','pause','waiting','stalled','suspend','error','abort','emptied'].forEach(function(e){a.addEventListener(e,function(){L('event '+e)})});
 var op=a.play.bind(a);a.play=function(){L('play() called');var p=op();if(p&&p.then)p.then(function(){L('play() OK')},function(e){L('play() FAILED: '+e.name+' '+e.message)});return p};
