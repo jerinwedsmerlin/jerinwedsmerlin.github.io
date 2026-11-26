@@ -550,5 +550,20 @@ function spawn(){
 setInterval(spawn,700);
 })();
 </script>
+<script>
+/* Music check panel – only shows when the link ends with ?debug */
+(function(){if(!/debug/.test(location.search))return;
+var a=document.getElementById('bgm'),box=document.createElement('div'),log=[];
+box.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99;background:#000d;color:#0f0;font:12px monospace;padding:8px;max-height:40vh;overflow:auto;white-space:pre-wrap';
+var pre=document.createElement('div');box.appendChild(pre);document.body.appendChild(box);
+function st(){return 'paused='+a.paused+' muted='+a.muted+' vol='+a.volume+' ready='+a.readyState+' net='+a.networkState+' t='+a.currentTime.toFixed(1)+(a.error?' ERR='+a.error.code+' '+(a.error.message||''):'')}
+function L(m){log.push(new Date().toTimeString().slice(0,8)+' '+m);pre.textContent='MUSIC CHECK – screenshot this\n'+navigator.userAgent+'\nsrc='+a.currentSrc+'\n'+st()+'\n\n'+log.slice(-14).join('\n')}
+['loadstart','loadedmetadata','canplay','playing','pause','waiting','stalled','suspend','error','abort','emptied'].forEach(function(e){a.addEventListener(e,function(){L('event '+e)})});
+var op=a.play.bind(a);a.play=function(){L('play() called');var p=op();if(p&&p.then)p.then(function(){L('play() OK')},function(e){L('play() FAILED: '+e.name+' '+e.message)});return p};
+document.addEventListener('click',function(e){L('tap on '+(e.target.id||e.target.tagName))},true);
+var b=document.createElement('button');b.textContent='TEST PLAY';b.style.cssText='margin-top:6px;padding:6px 10px';b.onclick=function(e){e.stopPropagation();a.muted=false;try{a.volume=1}catch(x){}a.play()};
+L('ready');box.appendChild(b);setInterval(function(){L('');log.pop()},1000);
+})();
+</script>
 </body>
 </html>
