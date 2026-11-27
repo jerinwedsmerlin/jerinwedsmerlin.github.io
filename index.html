@@ -151,6 +151,16 @@ body.ml-mode .st p{font-size:14px;line-height:1.9}
 .dots{display:flex;justify-content:center;gap:8px;margin-top:4px}
 .dots i{width:8px;height:8px;border-radius:50%;background:#c9d4cd;transition:.3s}
 .dots i.on{background:var(--gold);width:22px;border-radius:5px}
+/* Film strip gallery */
+.galwrap,#gDots{display:none!important}
+.film{position:relative;margin-top:26px;background:#1c1c1c;padding:17px 0;overflow:hidden;border-radius:4px;box-shadow:0 12px 26px #24533c33}
+.film:before,.film:after{content:'';position:absolute;left:0;right:0;height:9px;z-index:2;background:repeating-linear-gradient(90deg,rgba(255,250,235,.92) 0 9px,transparent 9px 20px)}
+.film:before{top:4px}.film:after{bottom:4px}
+.ftrack{display:flex;gap:10px;width:max-content;animation:froll 45s linear infinite}
+.film.hold .ftrack{animation-play-state:paused}
+.ftrack img{height:250px;width:auto;border-radius:3px;cursor:pointer;display:block}
+@keyframes froll{to{transform:translateX(-50%)}}
+@media(min-width:700px){.ftrack img{height:320px}.film:hover .ftrack{animation-play-state:paused}}
 #lb{position:fixed;inset:0;z-index:70;background:#0c1712f2;display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px}
 #lb.on{display:flex}
 #lb img{max-width:100%;max-height:78vh;border-radius:6px;box-shadow:0 20px 60px #000}
@@ -352,7 +362,7 @@ body.ml-mode .ct h4{font-family:'Noto Serif Malayalam',serif;font-size:15px}
     <h2 class="tg r" style="font-size:60px;color:var(--green)" data-en="Photo Gallery" data-ml="ചിത്രങ്ങൾ">Photo Gallery</h2>
     <div class="galwrap r"><button class="galbtn pv" id="gPrev" aria-label="Previous">‹</button><div class="gallery" id="gallery"></div><button class="galbtn nx" id="gNext" aria-label="Next">›</button></div>
     <div class="dots" id="gDots"></div>
-    <p class="r" style="font-size:13px;color:var(--muted);margin-top:12px" data-en="Swipe to see more · Tap a photo to view it larger" data-ml="കൂടുതൽ കാണാൻ നീക്കുക · വലുതായി കാണാൻ ചിത്രത്തിൽ തൊടുക">Swipe to see more · Tap a photo to view it larger</p>
+    <p class="r" style="font-size:13px;color:var(--muted);margin-top:12px" data-en="Tap a photo to view it larger" data-ml="വലുതായി കാണാൻ ചിത്രത്തിൽ തൊടുക">Tap a photo to view it larger</p>
   </div>
 </section>
 <div id="lb"><button class="x" aria-label="Close">×</button><button class="pv" aria-label="Previous">‹</button><img alt=""><div class="cap"></div><button class="nx" aria-label="Next">›</button></div>
@@ -544,6 +554,16 @@ document.getElementById('form').addEventListener('submit',async e=>{e.preventDef
     alertBox(ml?'അയയ്ക്കാൻ കഴിഞ്ഞില്ല. ഇന്റർനെറ്റ് പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക.':'Could not send. Please check your internet and try again.');}
 });
 function alertBox(t){let d=document.getElementById('formErr');if(!d){d=document.createElement('p');d.id='formErr';d.style.cssText='color:#a8283a;margin-top:12px;text-align:center';document.getElementById('form').appendChild(d);}d.textContent=t;}
+</script>
+<script>
+/* Film strip gallery: photos roll slowly; tap one to see it large */
+(function(){var w=document.querySelector('.galwrap');if(!w||typeof PHOTOS==='undefined'||!PHOTOS.length)return;
+var f=document.createElement('div');f.className='film';var t=document.createElement('div');t.className='ftrack';f.appendChild(t);
+PHOTOS.concat(PHOTOS).forEach(function(p,i){var im=new Image();im.src=p.src;im.alt='';im.onclick=function(){openLb(i%PHOTOS.length)};t.appendChild(im)});
+w.parentNode.insertBefore(f,w);
+f.addEventListener('touchstart',function(){f.classList.add('hold')},{passive:true});
+f.addEventListener('touchend',function(){setTimeout(function(){f.classList.remove('hold')},1500)});
+})();
 </script>
 <script>
 /* Floating notes, hearts & doves while the music plays */
